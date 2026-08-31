@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: tg-magnet-stremio
+    env: docker
+    plan: free
+    envVars:
+      - key: PORT
+        value: "8000"
+      - key: API_ID
+        sync: false
+      - key: API_HASH
+        sync: false
+      - key: BOT_TOKEN
+        sync: false
+      - key: SESSION_STRING
+        sync: false
+      - key: CHANNEL_ID
+        sync: false
+      - key: OWNER_ID
+        sync: false
+      - key: BASE_URL
+        sync: false
+      - key: TMDB_API_KEY
+        sync: false

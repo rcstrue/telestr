@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Telegram2.0 — Configure</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0a0a0a; color: #e0e0e0; min-height: 100vh; }
+.container { max-width: 600px; margin: 0 auto; padding: 24px 16px; }
+.header { display: flex; align-items: center; gap: 12px; margin-bottom: 6px; }
+.header .logo { width: 36px; height: 36px; background: #229ED9; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.1rem; color: #fff; }
+h1 { font-size: 1.4rem; font-weight: 700; }
+h1 span { color: #229ED9; }
+.subtitle { color: #666; font-size: 0.82rem; margin-bottom: 20px; }
+
+/* Action Buttons Bar */
+.action-bar { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
+.action-btn { flex: 1; min-width: 120px; padding: 12px 16px; border: none; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 0.82rem; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; }
+.action-btn .icon { font-size: 1.1rem; }
+.btn-install { background: linear-gradient(135deg, #229ED9, #1a7ab5); color: #fff; }
+.btn-install:hover { background: linear-gradient(135deg, #1a8cd4, #156a9e); transform: translateY(-1px); }
+.btn-copy { background: #1a1a1a; border: 1px solid #333; color: #e0e0e0; }
+.btn-copy:hover { border-color: #229ED9; color: #229ED9; }
+.btn-copy.copied { border-color: #22c55e; color: #22c55e; }
+.btn-app { background: #1a1a1a; border: 1px solid #333; color: #e0e0e0; }
+.btn-app:hover { border-color: #555; color: #fff; }
+.btn-files { background: #1a1a1a; border: 1px solid #333; color: #e0e0e0; }
+.btn-files:hover { border-color: #a855f7; color: #a855f7; }
+
+/* Add Account Form */
+.form-card { background: #111; border: 1px solid #222; border-radius: 12px; padding: 20px; margin-bottom: 24px; }
+.form-card h2 { font-size: 0.95rem; font-weight: 600; margin-bottom: 16px; color: #ccc; }
+.field { margin-bottom: 12px; }
+.field label { display: block; font-size: 0.78rem; color: #888; margin-bottom: 4px; font-weight: 500; }
+.field input { width: 100%; background: #0a0a0a; border: 1px solid #222; border-radius: 8px; padding: 10px 12px; color: #fff; font-size: 0.85rem; outline: none; transition: border-color 0.2s; }
+.field input:focus { border-color: #229ED9; }
+.field input::placeholder { color: #444; }
+.btn-row { display: flex; gap: 8px; margin-top: 16px; }
+.btn { padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.85rem; transition: all 0.2s; }
+.btn-primary { background: #229ED9; color: #fff; flex: 1; }
+.btn-primary:hover { background: #1a8cd4; }
+.btn-primary:disabled { background: #333; cursor: not-allowed; }
+.btn-secondary { background: #1a1a1a; border: 1px solid #333; color: #aaa; }
+.btn-secondary:hover { border-color: #555; color: #fff; }
+
+/* Account List */
+.account-list { margin-bottom: 20px; }
+.account-item { background: #111; border: 1px solid #222; border-radius: 10px; padding: 14px 16px; margin-bottom: 8px; display: flex; align-items: center; gap: 12px; transition: border-color 0.2s; }
+.account-item:hover { border-color: #333; }
+.account-item .icon { width: 38px; height: 38px; background: #0d2a1a; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0; }
+.account-item .info { flex: 1; min-width: 0; }
+.account-item .info .aname { font-size: 0.88rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.account-item .info .aurl { font-size: 0.72rem; color: #666; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.account-item .info .auser { font-size: 0.72rem; color: #555; }
+.account-item .del-btn { background: none; border: 1px solid #333; color: #666; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.75rem; transition: all 0.2s; white-space: nowrap; }
+.account-item .del-btn:hover { border-color: #ef4444; color: #ef4444; }
+
+/* Status Messages */
+.test-result { padding: 8px 12px; border-radius: 6px; font-size: 0.8rem; margin-top: 8px; display: none; }
+.test-result.ok { display: block; background: #0d2a0d; color: #22c55e; border: 1px solid #1a4a1a; }
+.test-result.fail { display: block; background: #2a0d0d; color: #ef4444; border: 1px solid #4a1a1a; }
+
+.empty { text-align: center; color: #333; padding: 30px; font-size: 0.88rem; }
+
+.toast { position: fixed; bottom: 20px; right: 20px; background: #22c55e; color: #000; padding: 10px 18px; border-radius: 8px; font-weight: 600; font-size: 0.85rem; display: none; z-index: 99; }
+.toast.error { background: #ef4444; color: #fff; }
+
+.refresh-row { display: flex; justify-content: flex-end; margin-bottom: 12px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <div class="logo">T</div>
+    <h1><span>Telegram</span>2.0</h1>
+  </div>
+  <p class="subtitle">Add your Torrin / WebDAV accounts to browse and stream files in Stremio.</p>
+
+  <!-- Action Buttons -->
+  <div class="action-bar">
+    <button class="action-btn btn-install" onclick="installAddon()">
+      <span class="icon">▶</span> Install in Stremio
+    </button>
+    <button class="action-btn btn-copy" id="copyBtn" onclick="copyLink()">
+      <span class="icon">⎘</span> <span id="copyText">Copy Link</span>
+    </button>
+    <a class="action-btn btn-app" href="/">
+      <span class="icon">⌂</span> Dashboard
+    </a>
+    <a class="action-btn btn-files" href="/file">
+      <span class="icon">📁</span> Files
+    </a>
+  </div>
+
+  <!-- Add Account -->
+  <div class="form-card">
+    <h2>Add WebDAV Account</h2>
+    <div class="field">
+      <label>Label (optional)</label>
+      <input type="text" id="accName" placeholder="My Torrin">
+    </div>
+    <div class="field">
+      <label>WebDAV URL</label>
+      <input type="text" id="accUrl" value="https://webdav.torrin.app/" placeholder="https://webdav.torrin.app/">
+    </div>
+    <div class="field">
+      <label>Username / Email</label>
+      <input type="text" id="accUser" placeholder="user@example.com">
+    </div>
+    <div class="field">
+      <label>Password</label>
+      <input type="password" id="accPass" placeholder="App password or API key">
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-secondary" id="testBtn" onclick="testConn()">Test</button>
+      <button class="btn btn-primary" id="addBtn" onclick="addAccount()">Add Account</button>
+    </div>
+    <div class="test-result" id="testResult"></div>
+  </div>
+
+  <!-- Accounts -->
+  <div class="refresh-row">
+    <button class="btn btn-secondary" onclick="refreshAll()" style="padding:6px 14px;font-size:0.78rem">Refresh All</button>
+  </div>
+  <div id="accountList"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = '';
+
+function getAddonUrl() {
+  // Build manifest URL from current location
+  const loc = window.location.origin;
+  return loc + '/manifest.json';
+}
+
+function installAddon() {
+  const url = getAddonUrl();
+  // Try Stremio protocol handler, fallback to web
+  const stremioUrl = 'stremio://' + encodeURIComponent(url);
+  window.location.href = stremioUrl;
+  // Fallback: open Stremio web install
+  setTimeout(() => {
+    window.open('https://web.stremio.com/#/addons?addon=' + encodeURIComponent(url), '_blank');
+  }, 1500);
+}
+
+function copyLink() {
+  const url = getAddonUrl();
+  navigator.clipboard.writeText(url).then(() => {
+    const btn = document.getElementById('copyBtn');
+    const txt = document.getElementById('copyText');
+    btn.classList.add('copied');
+    txt.textContent = 'Copied!';
+    showToast('Addon link copied!');
+    setTimeout(() => {
+      btn.classList.remove('copied');
+      txt.textContent = 'Copy Link';
+    }, 3000);
+  }).catch(() => {
+    // Fallback for older browsers
+    const ta = document.createElement('textarea');
+    ta.value = url;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    showToast('Addon link copied!');
+  });
+}
+
+function showToast(msg, err) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast' + (err ? ' error' : '');
+  t.style.display = 'block';
+  setTimeout(() => t.style.display = 'none', 3000);
+}
+
+async function loadAccounts() {
+  try {
+    const r = await fetch(API + '/api/webdav/accounts');
+    const d = await r.json();
+    const el = document.getElementById('accountList');
+    const accounts = d.accounts || [];
+    if (accounts.length === 0) {
+      el.innerHTML = '<p class="empty">No WebDAV accounts added yet.</p>';
+      return;
+    }
+    el.innerHTML = '<p style="font-size:0.82rem;color:#666;margin-bottom:8px;font-weight:600">Connected Accounts (' + accounts.length + ')</p>' + accounts.map(a => `
+      <div class="account-item">
+        <div class="icon">🏄</div>
+        <div class="info">
+          <div class="aname">${a.name}</div>
+          <div class="aurl">${a.url}</div>
+          <div class="auser">${a.username}</div>
+        </div>
+        <button class="del-btn" onclick="delAccount(${a.id})">Remove</button>
+      </div>`).join('');
+  } catch(e) { console.error(e); }
+}
+
+async function addAccount() {
+  const url = document.getElementById('accUrl').value.trim();
+  const user = document.getElementById('accUser').value.trim();
+  const pass = document.getElementById('accPass').value;
+  const name = document.getElementById('accName').value.trim();
+  if (!url || !user) { showToast('URL and username required', true); return; }
+  const btn = document.getElementById('addBtn');
+  btn.disabled = true; btn.textContent = 'Adding...';
+  try {
+    const r = await fetch(API + '/api/webdav/accounts', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({name, url, username: user, password: pass})
+    });
+    const d = await r.json();
+    if (d.ok) {
+      showToast('Account added! Open Stremio catalog to see files.');
+      document.getElementById('accName').value = '';
+      document.getElementById('accPass').value = '';
+      loadAccounts();
+    } else {
+      showToast(d.detail || 'Error', true);
+    }
+  } catch(e) { showToast('Failed: ' + e.message, true); }
+  btn.disabled = false; btn.textContent = 'Add Account';
+}
+
+async function delAccount(id) {
+  if (!confirm('Remove this account?')) return;
+  await fetch(API + '/api/webdav/accounts/' + id, {method:'DELETE'});
+  showToast('Account removed');
+  loadAccounts();
+}
+
+async function testConn() {
+  const url = document.getElementById('accUrl').value.trim();
+  const user = document.getElementById('accUser').value.trim();
+  const pass = document.getElementById('accPass').value;
+  const el = document.getElementById('testResult');
+  const btn = document.getElementById('testBtn');
+  if (!url || !user) { el.className='test-result fail'; el.style.display='block'; el.textContent='URL and username required'; return; }
+  btn.disabled = true; btn.textContent = 'Testing...';
+  el.style.display = 'none';
+  try {
+    const r = await fetch(API + '/api/webdav/test', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({url, username: user, password: pass})
+    });
+    const d = await r.json();
+    el.className = 'test-result ' + (d.ok ? 'ok' : 'fail');
+    el.style.display = 'block';
+    el.textContent = d.message;
+  } catch(e) {
+    el.className='test-result fail'; el.style.display='block'; el.textContent=e.message;
+  }
+  btn.disabled = false; btn.textContent = 'Test';
+}
+
+async function refreshAll() {
+  try {
+    const r = await fetch(API + '/api/webdav/refresh', {method:'POST'});
+    const d = await r.json();
+    if (d.ok) {
+      let msg = 'Refreshed! ' + d.files_found + ' files found';
+      if (d.errors && d.errors.length > 0) msg += ' (' + d.errors.length + ' errors)';
+      showToast(msg);
+    }
+    else showToast('Refresh failed', true);
+  } catch(e) { showToast('Error: ' + e.message, true); }
+}
+
+loadAccounts();
+</script>
+</body>
+</html>

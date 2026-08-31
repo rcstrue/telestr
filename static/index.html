@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Telegram2.0</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0a0a0a; color: #e0e0e0; min-height: 100vh; }
+.container { max-width: 960px; margin: 0 auto; padding: 20px; }
+
+/* Header */
+.header { display: flex; align-items: center; gap: 12px; margin-bottom: 4px; }
+.header .logo { width: 36px; height: 36px; background: #229ED9; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.1rem; color: #fff; }
+h1 { font-size: 1.5rem; font-weight: 700; }
+h1 span { color: #229ED9; }
+.subtitle { color: #666; font-size: 0.82rem; margin-bottom: 24px; }
+
+/* Add Magnet Section */
+.add-section { background: #111; border: 1px solid #222; border-radius: 12px; padding: 20px; margin-bottom: 24px; }
+.add-section label { display: block; font-weight: 600; margin-bottom: 8px; font-size: 0.88rem; color: #aaa; }
+.add-row { display: flex; gap: 8px; }
+.add-row input { flex: 1; background: #0a0a0a; border: 1px solid #222; border-radius: 8px; padding: 11px 14px; color: #fff; font-size: 0.85rem; outline: none; transition: border-color 0.2s; }
+.add-row input:focus { border-color: #229ED9; }
+.add-row input::placeholder { color: #444; }
+.add-row button { background: #229ED9; color: #fff; border: none; border-radius: 8px; padding: 11px 22px; cursor: pointer; font-weight: 600; font-size: 0.88rem; white-space: nowrap; transition: background 0.2s; }
+.add-row button:hover { background: #1a8cd4; }
+.add-row button:disabled { background: #333; cursor: not-allowed; }
+
+/* Stats Row */
+.stats { display: flex; gap: 12px; margin-bottom: 24px; }
+.stat-card { background: #111; border: 1px solid #222; border-radius: 10px; padding: 14px 18px; flex: 1; }
+.stat-card .num { font-size: 1.4rem; font-weight: 700; color: #229ED9; }
+.stat-card .label { font-size: 0.72rem; color: #666; margin-top: 2px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+/* Addon URL */
+.addon-box { background: #0d1a0d; border: 1px solid #1a3a1a; border-radius: 10px; padding: 14px 18px; margin-bottom: 24px; display: flex; align-items: center; gap: 12px; }
+.addon-box .tag { background: #22c55e; color: #000; font-size: 0.68rem; font-weight: 700; padding: 3px 8px; border-radius: 4px; text-transform: uppercase; }
+.addon-box code { flex: 1; font-size: 0.78rem; color: #888; word-break: break-all; }
+.addon-box button { background: none; border: 1px solid #1a3a1a; color: #22c55e; padding: 5px 14px; border-radius: 6px; cursor: pointer; font-size: 0.78rem; transition: background 0.2s; }
+.addon-box button:hover { background: #1a3a1a; }
+
+/* Section titles */
+.section-title { font-size: 0.88rem; font-weight: 600; margin-bottom: 10px; color: #888; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 8px; }
+.section-title .count { background: #229ED9; color: #fff; font-size: 0.65rem; padding: 2px 7px; border-radius: 10px; font-weight: 700; }
+
+/* Downloads */
+.download-list { margin-bottom: 24px; }
+.download-item { background: #111; border: 1px solid #222; border-radius: 8px; padding: 12px 16px; margin-bottom: 6px; display: flex; align-items: center; gap: 12px; transition: border-color 0.2s; }
+.download-item:hover { border-color: #333; }
+.download-item .name { flex: 1; font-size: 0.83rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.download-item .status-tag { font-size: 0.68rem; font-weight: 700; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; white-space: nowrap; }
+.download-item .status-tag.downloading { background: #1e3a5f; color: #60a5fa; }
+.download-item .status-tag.uploading { background: #3b2a0f; color: #fbbf24; }
+.download-item .status-tag.completed { background: #0d2a0d; color: #22c55e; }
+.download-item .status-tag.failed { background: #2a0d0d; color: #ef4444; }
+.download-item .status-tag.queued { background: #1a1a1a; color: #888; }
+.download-item .bar { width: 100px; height: 5px; background: #1a1a1a; border-radius: 3px; overflow: hidden; flex-shrink: 0; }
+.download-item .bar-fill { height: 100%; border-radius: 3px; transition: width 0.5s; }
+.download-item .bar-fill.downloading { background: #229ED9; }
+.download-item .bar-fill.uploading { background: #f59e0b; }
+.download-item .bar-fill.completed { background: #22c55e; }
+.download-item .bar-fill.failed { background: #ef4444; }
+.download-item .error-text { font-size: 0.72rem; color: #ef4444; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; }
+
+/* Catalog Grid */
+.catalog-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; margin-bottom: 24px; }
+.catalog-card { background: #111; border: 1px solid #222; border-radius: 10px; overflow: hidden; transition: border-color 0.2s, transform 0.15s; cursor: default; }
+.catalog-card:hover { border-color: #229ED9; transform: translateY(-2px); }
+.catalog-card .poster { width: 100%; aspect-ratio: 2/3; background: #1a1a1a; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.catalog-card .poster img { width: 100%; height: 100%; object-fit: cover; }
+.catalog-card .poster .placeholder { color: #333; font-size: 2rem; }
+.catalog-card .info { padding: 10px; }
+.catalog-card .info .cname { font-size: 0.78rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.catalog-card .info .cmeta { font-size: 0.68rem; color: #666; margin-top: 2px; }
+
+/* Files Table */
+.files-table { width: 100%; border-collapse: collapse; }
+.files-table th { text-align: left; padding: 8px 12px; font-size: 0.72rem; color: #555; border-bottom: 1px solid #1a1a1a; text-transform: uppercase; letter-spacing: 0.5px; }
+.files-table td { padding: 10px 12px; font-size: 0.82rem; border-bottom: 1px solid #111; }
+.files-table tr:hover td { background: #0d0d0d; }
+.files-table .del-btn { background: none; border: 1px solid #222; color: #555; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 0.72rem; transition: all 0.2s; }
+.files-table .del-btn:hover { border-color: #ef4444; color: #ef4444; }
+.empty { text-align: center; color: #333; padding: 40px 20px; font-size: 0.88rem; }
+
+/* Toast */
+.toast { position: fixed; bottom: 20px; right: 20px; background: #22c55e; color: #000; padding: 10px 18px; border-radius: 8px; font-weight: 600; font-size: 0.85rem; display: none; z-index: 99; transition: opacity 0.3s; }
+.toast.error { background: #ef4444; color: #fff; }
+</style>
+</head>
+<body>
+<div class="container">
+  <!-- Header -->
+  <div class="header">
+    <div class="logo">T</div>
+    <h1><span>Telegram</span>2.0</h1>
+  </div>
+  <p class="subtitle">Paste magnet links. Files upload to Telegram. Stream in Stremio.</p>
+
+  <!-- Add Magnet -->
+  <div class="add-section">
+    <label>Magnet Link</label>
+    <div class="add-row">
+      <input type="text" id="magnetInput" placeholder="magnet:?xt=urn:btih:...">
+      <button id="addBtn" onclick="addMagnet()">Add & Download</button>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats">
+    <div class="stat-card"><div class="num" id="fileCount">0</div><div class="label">Catalog Items</div></div>
+    <div class="stat-card"><div class="num" id="dlCount">0</div><div class="label">Active Downloads</div></div>
+    <div class="stat-card"><div class="num" id="totalDl">0</div><div class="label">Total Downloads</div></div>
+  </div>
+
+  <!-- Stremio Addon URL -->
+  <div class="addon-box">
+    <span class="tag">Stremio</span>
+    <code id="addonUrl">Loading...</code>
+    <button onclick="copyAddon()">Copy</button>
+  </div>
+
+  <!-- Downloads (all: active + failed + completed) -->
+  <div class="download-list" id="downloads"></div>
+
+  <!-- Stremio Catalog -->
+  <div style="margin-bottom:24px;">
+    <p class="section-title">Stremio Catalog <span class="count" id="catCount">0</span></p>
+    <div id="catalogContainer">
+      <p class="empty">No items in catalog. Add a magnet link to get started.</p>
+    </div>
+  </div>
+
+  <!-- File Library Table -->
+  <p class="section-title">File Library</p>
+  <div id="filesContainer">
+    <p class="empty">No files yet.</p>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = '';
+
+function showToast(msg, isError = false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast' + (isError ? ' error' : '');
+  t.style.display = 'block';
+  setTimeout(() => t.style.display = 'none', 3000);
+}
+
+async function addMagnet() {
+  const input = document.getElementById('magnetInput');
+  const btn = document.getElementById('addBtn');
+  const magnet = input.value.trim();
+  if (!magnet.startsWith('magnet:')) { showToast('Invalid magnet link', true); return; }
+  btn.disabled = true; btn.textContent = 'Starting...';
+  try {
+    const r = await fetch(API + '/api/add', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({magnet}) });
+    const d = await r.json();
+    if (d.ok) { showToast('Download started!'); input.value = ''; }
+    else showToast(d.detail || 'Error', true);
+  } catch(e) { showToast('Failed: ' + e.message, true); }
+  btn.disabled = false; btn.textContent = 'Add & Download';
+  setTimeout(refresh, 2000);
+}
+
+function copyAddon() {
+  navigator.clipboard.writeText(document.getElementById('addonUrl').textContent);
+  showToast('Copied! Paste in Stremio > Addons > Install from URL');
+}
+
+function formatSize(bytes) {
+  if (!bytes) return '-';
+  if (bytes < 1024*1024) return (bytes/1024).toFixed(1) + ' KB';
+  if (bytes < 1024*1024*1024) return (bytes/(1024*1024)).toFixed(1) + ' MB';
+  return (bytes/(1024*1024*1024)).toFixed(2) + ' GB';
+}
+
+async function refresh() {
+  try {
+    // Status
+    const s = await fetch(API + '/api/status');
+    const sd = await s.json();
+    document.getElementById('fileCount').textContent = sd.total_files;
+
+    // Addon URL
+    const au = await fetch(API + '/addon-url');
+    const aud = await au.json();
+    document.getElementById('addonUrl').textContent = aud.addon_url;
+
+    // Downloads (ALL — active, completed, failed, queued)
+    const dr = await fetch(API + '/api/downloads');
+    const dd = await dr.json();
+    const allDl = dd.downloads || [];
+    const activeDl = dd.active || [];
+    document.getElementById('dlCount').textContent = activeDl.length;
+    document.getElementById('totalDl').textContent = allDl.length;
+
+    const dlEl = document.getElementById('downloads');
+    const recentDl = allDl.slice(0, 8);
+    if (recentDl.length > 0) {
+      dlEl.innerHTML = '<p class="section-title">Recent Downloads <span class="count">' + allDl.length + '</span></p>' + recentDl.map(d => {
+        const st = d.status || 'queued';
+        const barClass = st === 'completed' ? 'completed' : st === 'failed' ? 'failed' : st === 'uploading' ? 'uploading' : 'downloading';
+        const pct = st === 'failed' ? 0 : (d.progress || 0);
+        const statusLabel = st.charAt(0).toUpperCase() + st.slice(1);
+        const err = d.error ? '<span class="error-text">' + d.error + '</span>' : '';
+        return '<div class="download-item">'
+          + '<span class="name">' + (d.file_name || d.id) + '</span>'
+          + '<span class="status-tag ' + st + '">' + statusLabel + '</span>'
+          + err
+          + '<div class="bar"><div class="bar-fill ' + barClass + '" style="width:' + pct + '%"></div></div>'
+          + '<span style="font-size:0.75rem;color:#666;width:40px;text-align:right">' + (st === 'failed' ? 'FAIL' : pct.toFixed(0) + '%') + '</span>'
+          + '</div>';
+      }).join('');
+    } else {
+      dlEl.innerHTML = '';
+    }
+
+    // Catalog (as Stremio sees it)
+    const cr = await fetch(API + '/api/catalog');
+    const cd = await cr.json();
+    document.getElementById('catCount').textContent = cd.total;
+    const catEl = document.getElementById('catalogContainer');
+    if (cd.catalog && cd.catalog.length > 0) {
+      catEl.innerHTML = '<div class="catalog-grid">' + cd.catalog.map(c => {
+        const posterHtml = c.poster
+          ? '<img src="' + c.poster + '" alt="" onerror="this.parentElement.innerHTML=\'<div class=placeholder>\u{1F3AC}</div>\'">'
+          : '<div class="placeholder">\u{1F3AC}</div>';
+        const yearStr = c.year ? c.year : '';
+        return '<div class="catalog-card">'
+          + '<div class="poster">' + posterHtml + '</div>'
+          + '<div class="info"><div class="cname">' + c.name + '</div>'
+          + '<div class="cmeta">' + yearStr + (yearStr ? ' · ' : '') + formatSize(c.size) + '</div>'
+          + '</div></div>';
+      }).join('') + '</div>';
+    } else {
+      catEl.innerHTML = '<p class="empty">No items in catalog. Add a magnet link to get started.</p>';
+    }
+
+    // Files table
+    const fr = await fetch(API + '/api/files');
+    const fd = await fr.json();
+    const fc = document.getElementById('filesContainer');
+    if (fd.files && fd.files.length > 0) {
+      fc.innerHTML = '<table class="files-table">'
+        + '<tr><th>Name</th><th>Size</th><th>Added</th><th></th></tr>'
+        + fd.files.map(f => '<tr>'
+          + '<td>' + f.name + '</td>'
+          + '<td>' + formatSize(f.size) + '</td>'
+          + '<td style="color:#555;font-size:0.75rem">' + (f.added_at || '').slice(0,10) + '</td>'
+          + '<td><button class="del-btn" onclick="delFile(' + f.id + ')">Remove</button></td>'
+          + '</tr>').join('')
+        + '</table>';
+    } else {
+      fc.innerHTML = '<p class="empty">No files yet.</p>';
+    }
+  } catch(e) { console.error(e); }
+}
+
+async function delFile(id) {
+  await fetch(API + '/api/files/' + id, { method: 'DELETE' });
+  refresh();
+}
+
+document.getElementById('magnetInput').addEventListener('keydown', e => { if (e.key === 'Enter') addMagnet(); });
+
+refresh();
+setInterval(refresh, 5000);
+</script>
+</body>
+</html>

@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Telegram2.0 — Torrin Files</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0a0a0a; color: #e0e0e0; min-height: 100vh; }
+.container { max-width: 900px; margin: 0 auto; padding: 24px 16px; }
+
+.header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
+.header-left { display: flex; align-items: center; gap: 12px; }
+.header .logo { width: 36px; height: 36px; background: #229ED9; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.1rem; color: #fff; }
+h1 { font-size: 1.4rem; font-weight: 700; }
+h1 span { color: #229ED9; }
+.header-right { display: flex; gap: 8px; }
+
+.nav-btn { padding: 8px 14px; background: #1a1a1a; border: 1px solid #333; border-radius: 8px; color: #aaa; cursor: pointer; font-size: 0.78rem; font-weight: 600; text-decoration: none; transition: all 0.2s; }
+.nav-btn:hover { border-color: #555; color: #fff; }
+.nav-btn.active { border-color: #229ED9; color: #229ED9; }
+
+/* Stats bar */
+.stats { display: flex; gap: 16px; margin-bottom: 20px; flex-wrap: wrap; }
+.stat-card { background: #111; border: 1px solid #222; border-radius: 10px; padding: 14px 18px; flex: 1; min-width: 140px; }
+.stat-card .stat-label { font-size: 0.72rem; color: #666; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+.stat-card .stat-value { font-size: 1.3rem; font-weight: 700; margin-top: 4px; color: #fff; }
+.stat-card .stat-value.accent { color: #229ED9; }
+.stat-card .stat-value.purple { color: #a855f7; }
+
+/* Search */
+.search-bar { margin-bottom: 16px; position: relative; }
+.search-bar input { width: 100%; background: #111; border: 1px solid #222; border-radius: 10px; padding: 12px 16px 12px 42px; color: #fff; font-size: 0.88rem; outline: none; transition: border-color 0.2s; }
+.search-bar input:focus { border-color: #229ED9; }
+.search-bar input::placeholder { color: #444; }
+.search-bar .search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #444; font-size: 1rem; }
+
+/* Files Table */
+.files-table { width: 100%; border-collapse: collapse; }
+.files-table thead th { text-align: left; padding: 10px 12px; font-size: 0.72rem; color: #555; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #1a1a1a; }
+.files-table tbody tr { border-bottom: 1px solid #151515; transition: background 0.15s; }
+.files-table tbody tr:hover { background: #0f0f0f; }
+.files-table td { padding: 12px; font-size: 0.84rem; vertical-align: middle; }
+.files-table .fname { color: #e0e0e0; font-weight: 500; max-width: 350px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.files-table .faccount { color: #229ED9; font-size: 0.78rem; font-weight: 500; background: #0d1f2d; padding: 3px 8px; border-radius: 4px; display: inline-block; }
+.files-table .fsize { color: #666; font-size: 0.8rem; font-variant-numeric: tabular-nums; }
+.files-table .fpath { color: #444; font-size: 0.72rem; max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.files-table .play-btn { background: none; border: 1px solid #333; color: #888; padding: 5px 12px; border-radius: 6px; cursor: pointer; font-size: 0.75rem; font-weight: 600; transition: all 0.2s; white-space: nowrap; }
+.files-table .play-btn:hover { border-color: #229ED9; color: #229ED9; }
+
+/* Empty / Loading */
+.empty-state { text-align: center; padding: 60px 20px; color: #333; }
+.empty-state .empty-icon { font-size: 3rem; margin-bottom: 12px; }
+.empty-state .empty-title { font-size: 1rem; color: #555; margin-bottom: 6px; }
+.empty-state .empty-sub { font-size: 0.82rem; color: #333; }
+
+.loading { text-align: center; padding: 40px; color: #444; }
+.spinner { display: inline-block; width: 20px; height: 20px; border: 2px solid #222; border-top-color: #229ED9; border-radius: 50%; animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.toast { position: fixed; bottom: 20px; right: 20px; background: #22c55e; color: #000; padding: 10px 18px; border-radius: 8px; font-weight: 600; font-size: 0.85rem; display: none; z-index: 99; }
+.toast.error { background: #ef4444; color: #fff; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <div class="header-left">
+      <div class="logo">T</div>
+      <h1><span>Torrin</span> Files</h1>
+    </div>
+    <div class="header-right">
+      <a href="/" class="nav-btn">Dashboard</a>
+      <a href="/configure" class="nav-btn">Configure</a>
+      <button class="nav-btn active" onclick="loadFiles()">Refresh</button>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats">
+    <div class="stat-card">
+      <div class="stat-label">Total Files</div>
+      <div class="stat-value accent" id="statFiles">-</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Total Size</div>
+      <div class="stat-value" id="statSize">-</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Accounts</div>
+      <div class="stat-value purple" id="statAccounts">-</div>
+    </div>
+  </div>
+
+  <!-- Search -->
+  <div class="search-bar">
+    <span class="search-icon">🔍</span>
+    <input type="text" id="searchInput" placeholder="Search files..." oninput="filterFiles()">
+  </div>
+
+  <!-- Files -->
+  <div id="filesContainer">
+    <div class="loading"><div class="spinner"></div><br>Loading files...</div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let allFiles = [];
+
+function formatSize(bytes) {
+  if (!bytes) return '—';
+  const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+  let i = 0;
+  let size = bytes;
+  while (size >= 1024 && i < units.length - 1) { size /= 1024; i++; }
+  return size.toFixed(i > 0 ? 1 : 0) + ' ' + units[i];
+}
+
+function formatTotalSize(bytes) {
+  if (!bytes) return '0 B';
+  const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+  let i = 0;
+  let size = bytes;
+  while (size >= 1024 && i < units.length - 1) { size /= 1024; i++; }
+  return size.toFixed(2) + ' ' + units[i];
+}
+
+function showToast(msg, err) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast' + (err ? ' error' : '');
+  t.style.display = 'block';
+  setTimeout(() => t.style.display = 'none', 3000);
+}
+
+async function loadFiles() {
+  const container = document.getElementById('filesContainer');
+  container.innerHTML = '<div class="loading"><div class="spinner"></div><br>Loading files...</div>';
+  try {
+    const r = await fetch('/api/torrin/files');
+    const d = await r.json();
+    allFiles = d.files || [];
+
+    // Update stats
+    document.getElementById('statFiles').textContent = d.total;
+    const totalBytes = allFiles.reduce((s, f) => s + (f.size || 0), 0);
+    document.getElementById('statSize').textContent = formatTotalSize(totalBytes);
+    document.getElementById('statAccounts').textContent = d.accounts;
+
+    if (allFiles.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-icon">📁</div>
+          <div class="empty-title">No files found</div>
+          <div class="empty-sub">Add a Torrin/WebDAV account on the <a href="/configure" style="color:#229ED9">Configure</a> page, then refresh.</div>
+        </div>`;
+      return;
+    }
+
+    renderFiles(allFiles);
+  } catch(e) {
+    container.innerHTML = `<div class="empty-state"><div class="empty-icon">⚠</div><div class="empty-title">Failed to load files</div><div class="empty-sub">${e.message}</div></div>`;
+  }
+}
+
+function renderFiles(files) {
+  const container = document.getElementById('filesContainer');
+  let html = `<table class="files-table">
+    <thead><tr>
+      <th>File Name</th>
+      <th>Account</th>
+      <th>Size</th>
+      <th>Path</th>
+      <th></th>
+    </tr></thead><tbody>`;
+
+  for (const f of files) {
+    html += `<tr>
+      <td class="fname" title="${f.name}">${f.name}</td>
+      <td><span class="faccount">${f.account}</span></td>
+      <td class="fsize">${formatSize(f.size)}</td>
+      <td class="fpath" title="${f.path}">${f.path}</td>
+      <td>${f.stream_url ? `<button class="play-btn" onclick="playFile('${f.stream_url}')">▶ Play</button>` : ''}</td>
+    </tr>`;
+  }
+
+  html += '</tbody></table>';
+  container.innerHTML = html;
+}
+
+function filterFiles() {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  if (!q) { renderFiles(allFiles); return; }
+  const filtered = allFiles.filter(f =>
+    f.name.toLowerCase().includes(q) ||
+    f.account.toLowerCase().includes(q) ||
+    f.path.toLowerCase().includes(q)
+  );
+  renderFiles(filtered);
+}
+
+function playFile(url) {
+  window.open(url, '_blank');
+}
+
+loadFiles();
+</script>
+</body>
+</html>

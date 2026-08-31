@@ -1,0 +1,8 @@
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+pyrogram==2.0.106
+tgcrypto==1.2.5
+aiosqlite==0.20.0
+httpx==0.28.1
+libtorrent==2.0.14
+python-multipart==0.0.18
