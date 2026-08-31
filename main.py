@@ -658,12 +658,9 @@ async def _try_get_direct_url_fresh(info: dict) -> str | None:
 
 # ---------- Stream Proxies ----------
 
-@app.get("/play/wd/{sid}")
-async def play_webdav(sid: str, request: Request):
-    """Stream a file from WebDAV (Torrin) to the client."""
+async def _resolve_wd_file(sid: str):
+    """Shared lookup: find WebDAV file info by sid, with all fallbacks."""
     info = wd_file_map.get(sid)
-
-    # Fallback: look up from DB
     if not info:
         db_row = await db.get_webdav_file(sid)
         if db_row:
@@ -675,23 +672,68 @@ async def play_webdav(sid: str, request: Request):
                 "content_type": db_row.get("content_type", ""),
             }
             wd_file_map[sid] = info
-
     if not info:
-        raise HTTPException(404, "WebDAV file not found. Open catalog to refresh.")
-
+        logger.info(f"play/wd/{sid} not found, re-browsing WebDAV...")
+        accounts = await db.get_webdav_accounts()
+        for acc in accounts:
+            full = await db.get_webdav_account(acc["id"])
+            if not full:
+                continue
+            await get_webdav_files_cached(acc["id"], full)
+        info = wd_file_map.get(sid)
+    if not info:
+        raise HTTPException(404, "WebDAV file not found. Try again in a few seconds.")
     account = await db.get_webdav_account(info["account_id"])
     if not account:
         raise HTTPException(404, "WebDAV account not found")
+    return info, account
+
+
+@app.head("/play/wd/{sid}")
+@app.get("/play/wd/{sid}")
+async def play_webdav(sid: str, request: Request):
+    """Stream a file from WebDAV (Torrin) to the client. Supports GET and HEAD."""
+    info, account = await _resolve_wd_file(sid)
 
     range_header = request.headers.get("range")
-    logger.info(f"WebDAV play: {info['name']} range={range_header}")
+    logger.info(f"WebDAV play: {info['name']} method={request.method} range={range_header}")
 
-    # Proxy through Render (for /files page browser playback)
     url = account["url"].rstrip("/") + info["path"]
     req_headers = {}
     if range_header:
         req_headers["Range"] = range_header
 
+    # For HEAD: just proxy the HEAD request and return headers, no body
+    if request.method == "HEAD":
+        try:
+            async with httpx.AsyncClient(
+                auth=(account["username"], account["password"]),
+                verify=False,
+                follow_redirects=True,
+                timeout=httpx.Timeout(15, connect=10, read=15, write=5),
+            ) as client:
+                resp = await client.head(url, headers=req_headers)
+                ct = resp.headers.get("content-type", "")
+                if not ct or ct == "application/octet-stream":
+                    from webdav_client import _guess_content_type
+                    ct = _guess_content_type(info["path"])
+                headers = {
+                    "Content-Type": ct,
+                    "Accept-Ranges": "bytes",
+                }
+                cr = resp.headers.get("content-range")
+                cl = resp.headers.get("content-length")
+                if cr:
+                    headers["Content-Range"] = cr
+                if cl:
+                    headers["Content-Length"] = cl
+                code = 206 if range_header and resp.status_code == 206 else 200
+                return Response(status_code=code, headers=headers)
+        except Exception as e:
+            logger.error(f"WebDAV HEAD error: {e}")
+            raise HTTPException(500, f"WebDAV HEAD error: {e}")
+
+    # For GET: proxy the full stream
     client = httpx.AsyncClient(
         auth=(account["username"], account["password"]),
         verify=False,
@@ -710,7 +752,6 @@ async def play_webdav(sid: str, request: Request):
             await client.aclose()
             raise HTTPException(resp.status_code, f"WebDAV returned {resp.status_code}")
 
-        # Determine content type
         ct = resp.headers.get("content-type", "")
         if not ct or ct == "application/octet-stream":
             from webdav_client import _guess_content_type
@@ -747,9 +788,10 @@ async def play_webdav(sid: str, request: Request):
         raise HTTPException(500, f"WebDAV stream error: {e}")
 
 
+@app.head("/play/{message_id}")
 @app.get("/play/{message_id}")
 async def play_telegram(message_id: int, request: Request):
-    """Stream a file from Telegram channel to the client."""
+    """Stream a file from Telegram channel to the client. Supports GET and HEAD."""
     range_header = request.headers.get("range")
 
     try:
@@ -760,6 +802,24 @@ async def play_telegram(message_id: int, request: Request):
 
         file_size = file.file_size
         file_name = file.file_name or "stream.mkv"
+
+        # HEAD: return headers only, no body
+        if request.method == "HEAD":
+            headers = {
+                "Accept-Ranges": "bytes",
+                "Content-Length": str(file_size),
+                "Content-Type": "video/mp4",
+                "Content-Disposition": f'inline; filename="{file_name}"',
+            }
+            if range_header:
+                range_match = __import__("re").search(r"bytes=(\d+)-(\d*)", range_header)
+                if range_match:
+                    start = int(range_match.group(1))
+                    end = int(range_match.group(2)) if range_match.group(2) else file_size - 1
+                    headers["Content-Range"] = f"bytes {start}-{end}/{file_size}"
+                    headers["Content-Length"] = str(end - start + 1)
+                    return Response(status_code=206, headers=headers)
+            return Response(status_code=200, headers=headers)
 
         start = 0
         end = file_size - 1
